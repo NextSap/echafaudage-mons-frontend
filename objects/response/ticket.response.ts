@@ -15,6 +15,8 @@ export const TicketResponseSchema = z.object({
     creationDate: z.number(),
     duration: z.number(),
     estimatedPrice: z.number(),
+    vatNumber: z.string(),
+    sale: z.boolean(),
 });
 
 export const TicketArrayResponseSchema = z.array(TicketResponseSchema);

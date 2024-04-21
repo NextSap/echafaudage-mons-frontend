@@ -15,7 +15,6 @@ import {TicketResponseSchemaType} from "@/objects/response/ticket.response";
 type TicketModalProps = {
     ticket: TicketResponseSchemaType,
     children: React.ReactNode,
-    type: "edit" | "get"
 }
 
 export function TicketModal(props: TicketModalProps) {
