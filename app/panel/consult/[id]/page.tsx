@@ -8,6 +8,7 @@ import {Label} from "@/components/ui/label";
 import {useRouter} from "next/navigation";
 import {Separator} from "@radix-ui/react-menu";
 import {useToast} from "@/components/ui/use-toast";
+import {PdfModal} from "@/components/preview-pdf-modal.component";
 
 const Consult = ({params}: { params: { id: string } }) => {
 
@@ -34,10 +35,12 @@ const Consult = ({params}: { params: { id: string } }) => {
     };
 
     return (
+
         <Card className="m-auto md:w-[80%] w-[90%] mt-5">
             <CardHeader className="flex">
                 <CardTitle>Devis de {ticket.name} - {ticket.sale ? "Vente" : "Location"} d'échafaudage</CardTitle>
-                <CardDescription>Créé le {new Date(ticket.creationDate).toLocaleDateString("fr-be")}</CardDescription>
+                <CardDescription>Créé
+                    le {new Date(ticket.creationDate).toLocaleDateString("fr-be")}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
                 <Label className="text-xl underline">Informations du client</Label>
@@ -97,21 +100,18 @@ const Consult = ({params}: { params: { id: string } }) => {
                     </div>
                 </div>
             </CardContent>
-            <Separator className="w-16 h-[1px] m-6 bg-primary" />
+            <Separator className="w-16 h-[1px] m-6 bg-primary"/>
             <CardFooter className="flex md:flex-row flex-col items-start gap-5">
-                <Button variant="outline" onClick={() => {router.push(`/panel/modify/${params.id}`)}}>Modifier</Button>
+                <Button variant="outline" onClick={() => {
+                    router.push(`/panel/modify/${params.id}`)
+                }}>Modifier</Button>
                 <Button variant="outline" onClick={() => {
                     window.location.href = `mailto:${ticket.email}`;
                 }}
                 >Envoyer un email</Button>
-                <Button variant="outline" onClick={() => {
-                    toast({
-                        variant: "destructive",
-                        title: "⚠️ Fonctionnalité indisponible",
-                        description: "Cette fonctionnalité arrivera dans une prochaine version de l'application",
-                        duration: 5000
-                    })
-                }}>Télécharger en PDF</Button>
+                <PdfModal ticket={ticket}>
+                    <Button variant="outline">Prévisualiser en PDF</Button>
+                </PdfModal>
                 <Button variant="destructive" onClick={() => {
                     toast({
                         variant: "destructive",
