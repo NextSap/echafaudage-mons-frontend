@@ -2,20 +2,21 @@
 
 import React from 'react';
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
-import {TicketResponseSchemaType} from "@/objects/response/ticket.response";
 import {Button} from "@/components/ui/button";
 import {Label} from "@/components/ui/label";
 import {useRouter} from "next/navigation";
 import {Separator} from "@radix-ui/react-menu";
 import {useToast} from "@/components/ui/use-toast";
 import {PdfModal} from "@/components/preview-pdf-modal.component";
+import {getTicket} from "@/services/ticket.service";
+import {useQuery} from "react-query";
 
 const Consult = ({params}: { params: { id: string } }) => {
 
     const router = useRouter();
     const {toast} = useToast()
 
-    const ticket: TicketResponseSchemaType = { // TODO Fetch the ticket with params.id
+   /* const ticket: TicketResponseSchemaType = {
         id: 0,
         name: "Sophie Martin",
         phoneNumber: "+32 485 56 78 90",
@@ -32,10 +33,13 @@ const Consult = ({params}: { params: { id: string } }) => {
         duration: 0,
         estimatedPrice: 100,
         sale: true,
-    };
+    }; */
+
+    const { data: ticket, isLoading, isError  } = useQuery(["ticket", params.id], () => getTicket(params.id))
+
+    if(ticket === undefined || isError) return <div>Error when fetching, refresh the page</div>
 
     return (
-
         <Card className="m-auto md:w-[80%] w-[90%] mt-5">
             <CardHeader className="flex">
                 <CardTitle>Devis de {ticket.name} - {ticket.sale ? "Vente" : "Location"} d'échafaudage</CardTitle>

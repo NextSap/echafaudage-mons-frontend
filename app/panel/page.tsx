@@ -31,6 +31,9 @@ import {
 import {TicketResponseSchemaType} from "@/objects/response/ticket.response";
 import {useToast} from "@/components/ui/use-toast";
 import {useRouter} from "next/navigation";
+import {useQuery} from "react-query";
+import {getPaginationInfo, getTickets} from "@/services/ticket.service";
+import {useState} from "react";
 
 const data: TicketResponseSchemaType[] = [
     {
@@ -417,6 +420,15 @@ const columns: ColumnDef<TicketResponseSchemaType>[] = [
 
 export default function DataTableDemo() {
 
+    const { data: paginationInfo } = useQuery('paginationInfo', () => getPaginationInfo(10));
+    const totalPages = paginationInfo?.totalPages;
+
+    const { data, isLoading, isError } = useQuery('tickets', () => getTickets(page, 10))
+
+    if(data === undefined || isError) return <div>Error when fetching, refresh the page</div>
+
+    const [page, setPage] = useState<number>(1);
+
     const table = useReactTable({
         data,
         columns,
@@ -480,22 +492,14 @@ export default function DataTableDemo() {
             </div>
             <div className="flex justify-center mt-4">
                 <div className="flex justify-center gap-10">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Précédent
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Suivant
-                    </Button>
+                    {totalPages !== 0 &&
+                        <div className="flex justify-center items-center gap-3 p-5">
+                            <Button className="w-20" onClick={() => setPage(page - 1)}
+                                    disabled={page == 1}>Précédent</Button>
+                            <p>{page} / {totalPages}</p>
+                            <Button className="w-20" onClick={() => setPage(page + 1)}
+                                    disabled={page == (totalPages)}>Suivant</Button>
+                        </div>}
                 </div>
             </div>
         </div>

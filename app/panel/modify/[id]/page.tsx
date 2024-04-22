@@ -3,7 +3,6 @@
 import React, {useState} from 'react';
 import {useRouter} from "next/navigation";
 import {useToast} from "@/components/ui/use-toast";
-import {TicketResponseSchemaType} from "@/objects/response/ticket.response";
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Label} from "@/components/ui/label";
 import {Separator} from "@radix-ui/react-menu";
@@ -17,30 +16,36 @@ import {Slider} from "@/components/ui/slider";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {z} from "zod";
 import {TicketRequestSchema} from "@/objects/request/ticket.request";
+import {useQuery} from "react-query";
+import {getTicket, updateTicket} from "@/services/ticket.service";
 
 const Modify = ({params}: { params: { id: string } }) => {
 
     const router = useRouter();
     const {toast} = useToast();
 
-    const ticket: TicketResponseSchemaType = { // TODO Fetch the ticket with params.id
-        id: 0,
-        name: "Sophie Martin",
-        phoneNumber: "+32 485 56 78 90",
-        email: "sophiemartin@example.com",
-        address: "address",
-        vatPayer: true,
-        vatNumber: "BE0123456789",
-        materialType: "Type 1",
-        height: 10,
-        length: 10,
-        area: 100,
-        seen: false,
-        creationDate: 0,
-        duration: -1,
-        estimatedPrice: 100,
-        sale: true,
-    };
+    /* const ticket: TicketResponseSchemaType = {
+         id: 0,
+         name: "Sophie Martin",
+         phoneNumber: "+32 485 56 78 90",
+         email: "sophiemartin@example.com",
+         address: "address",
+         vatPayer: true,
+         vatNumber: "BE0123456789",
+         materialType: "Type 1",
+         height: 10,
+         length: 10,
+         area: 100,
+         seen: false,
+         creationDate: 0,
+         duration: -1,
+         estimatedPrice: 100,
+         sale: true,
+     }; */
+
+    const {data: ticket, isLoading, isError} = useQuery(["ticket", params.id], () => getTicket(params.id))
+
+    if (ticket === undefined || isError) return <div>Error when fetching, refresh the page</div>
 
     const form = useForm<z.infer<typeof TicketRequestSchema>>({
         resolver: zodResolver(TicketRequestSchema),
@@ -62,6 +67,20 @@ const Modify = ({params}: { params: { id: string } }) => {
     });
 
     function onSubmit(values: z.infer<typeof TicketRequestSchema>) {
+        updateTicket(params.id, values)
+            .then(() => {
+                router.push(`/panel/consult/${params.id}`);
+                toast({
+                    title: "✔️ Devis modifié",
+                    description: "Le devis a bien été modifié",
+                });
+            }).catch((error) => {
+            toast({
+                title: "Erreur",
+                variant: "destructive",
+                description: error.message,
+            });
+        })
         console.log(values)
     };
 
@@ -158,7 +177,7 @@ const Modify = ({params}: { params: { id: string } }) => {
                                                     <Checkbox checked={value} onCheckedChange={(e) => {
                                                         onChange(e);
                                                         setSale(!value);
-                                                        if(form.getValues("duration") < 1) form.setValue("duration", 1);
+                                                        if (form.getValues("duration") < 1) form.setValue("duration", 1);
                                                     }} id={"sale"}/>
                                                 </FormControl>
                                                 <FormLabel htmlFor={"sale"}>Vente d'échafaudage</FormLabel>
@@ -256,7 +275,7 @@ const Modify = ({params}: { params: { id: string } }) => {
                                             <FormLabel>Prix estimé - €</FormLabel>
                                             <FormControl>
                                                 <Input type={"number"} min={"1"} defaultValue={field.value}
-                                                       step={0.01} placeholder="Prix estimé" onChange={field.onChange} />
+                                                       step={0.01} placeholder="Prix estimé" onChange={field.onChange}/>
                                             </FormControl>
                                             <FormMessage/>
                                         </FormItem>
@@ -271,7 +290,7 @@ const Modify = ({params}: { params: { id: string } }) => {
                                                     - {field.value} semaine{field.value > 1 ? "s" : ""}</FormLabel>
                                                 <FormControl>
                                                     <Input type={"number"} min={"1"} defaultValue={field.value}
-                                                           step={1} placeholder="Durée" onChange={field.onChange} />
+                                                           step={1} placeholder="Durée" onChange={field.onChange}/>
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
@@ -284,8 +303,8 @@ const Modify = ({params}: { params: { id: string } }) => {
                     <CardFooter className="flex md:flex-row flex-col items-start gap-5">
                         <Button type="submit" variant="outline"
                                 onClick={() => {
-                                    if(sale) form.setValue("duration", -1);
-                                    if(!form.getValues("vatPayer")) form.setValue("vatNumber", "N/A")
+                                    if (sale) form.setValue("duration", -1);
+                                    if (!form.getValues("vatPayer")) form.setValue("vatNumber", "N/A")
                                 }}
                         >Appliquer les modifications</Button>
                         <Button variant="destructive" onClick={() => {

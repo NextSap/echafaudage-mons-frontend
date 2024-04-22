@@ -21,6 +21,7 @@ import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import React, {useState} from "react";
 import {TicketRequestSchema} from "@/objects/request/ticket.request";
 import {useToast} from "@/components/ui/use-toast";
+import {createTicket} from "@/services/ticket.service";
 
 export default function Home() {
     const {toast} = useToast();
@@ -45,7 +46,23 @@ export default function Home() {
 
     function onSubmit(values: z.infer<typeof TicketRequestSchema>) {
         // TODO: Set the price
-        console.log(values);
+        const price = values.area[0] * 12;
+        form.setValue("estimatedPrice", price);
+
+        createTicket(values)
+            .then(() => {
+                // TODO: send email
+                toast({
+                    title: "Devis demandé",
+                    description: `Votre demande de devis a bien été envoyée à l'adresse email: ${form.getValues("email")}`,
+                });
+            }).catch((error) => {
+            toast({
+                title: "Erreur",
+                variant: "destructive",
+                description: error.message,
+            });
+        });
     };
 
     const [vatPayer, setVatPayer] = useState(false);
@@ -53,7 +70,7 @@ export default function Home() {
 
     return (
         <Tabs defaultValue="sale" onValueChange={() => {
-            if(form.getValues("duration") < 1) form.setValue("duration", 1);
+            if (form.getValues("duration") < 1) form.setValue("duration", 1);
             setSale(!sale);
         }}
               className="flex flex-col items-center md:w-[80%] w-[95%] gap-5 pt-10 m-auto">
@@ -229,10 +246,6 @@ export default function Home() {
                         <Button type="submit" onClick={() => {
                             if (sale) form.setValue("duration", -1);
                             if (!form.getValues("vatPayer")) form.setValue("vatNumber", "N/A");
-                            toast({
-                                title: "Devis demandé",
-                                description: `Votre demande de devis a bien été envoyée à l'adresse email: ${form.getValues("email")}`,
-                            })
                         }}>Demander un devis gratuit</Button>
                     </form>
                 </Form>
