@@ -18,25 +18,14 @@ import {Checkbox} from "@/components/ui/checkbox";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Card} from "@/components/ui/card";
 import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
-import {useState} from "react";
-
-const formSchema = z.object({
-    name: z.string().min(2, {message: "Nom requis"}),
-    email: z.string().email({message: "Adresse email invalide"}),
-    phoneNumber: z.string().min(10, {message: "Numéro de téléphone invalide"}),
-    address: z.string().min(5, {message: "Adresse invalide"}),
-    vatPayer: z.boolean(),
-    materialType: z.string(),
-    height: z.coerce.number().min(0.5, {message: "Hauteur minimum: 0,5m"}),
-    length: z.coerce.number().min(0.5, {message: "Longueur minimum: 0,5m"}),
-    area: z.array(z.number()),
-    vatNumber: z.string(),
-    duration: z.number().min(1, {message: "Durée minimum: 1 semaine"}),
-})
+import React, {useState} from "react";
+import {TicketRequestSchema} from "@/objects/request/ticket.request";
+import {useToast} from "@/components/ui/use-toast";
 
 export default function Home() {
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
+    const {toast} = useToast();
+    const form = useForm<z.infer<typeof TicketRequestSchema>>({
+        resolver: zodResolver(TicketRequestSchema),
         defaultValues: {
             name: "",
             email: "",
@@ -48,27 +37,31 @@ export default function Home() {
             length: 0,
             area: [0],
             vatNumber: "",
-            duration: 0
+            duration: 0,
+            estimatedPrice: 0,
+            sale: true,
         },
     });
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
-        console.log(values)
+    function onSubmit(values: z.infer<typeof TicketRequestSchema>) {
+        // TODO: Set the price
+        console.log(values);
     };
 
     const [vatPayer, setVatPayer] = useState(false);
-    const [location, setLocation] = useState(false);
+    const [sale, setSale] = useState(true);
 
     return (
-        <Tabs defaultValue="selling" onValueChange={() => setLocation(!location)}
-              className="flex flex-col items-center gap-5 p-10">
-            <TabsList className="md:w-[80%] w-[95%]">
-                <TabsTrigger value="selling" className="w-full">Vente</TabsTrigger>
-                <TabsTrigger value="renting" className="w-full">Location</TabsTrigger>
+        <Tabs defaultValue="sale" onValueChange={() => {
+            if(form.getValues("duration") < 1) form.setValue("duration", 1);
+            setSale(!sale);
+        }}
+              className="flex flex-col items-center md:w-[80%] w-[95%] gap-5 pt-10 m-auto">
+            <TabsList className="w-full">
+                <TabsTrigger value="sale" className="w-full">Vente</TabsTrigger>
+                <TabsTrigger value="rent" className="w-full">Location</TabsTrigger>
             </TabsList>
-            <Card className="md:w-[80%] w-[95%]">
+            <Card className="w-full">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}
                           className="flex flex-col gap-5 md:w-[80%] w-[95%] m-auto p-5">
@@ -124,7 +117,7 @@ export default function Home() {
                                             <FormMessage/>
                                         </FormItem>
                                     )}/>
-                                {location &&
+                                {!sale &&
                                     <FormField
                                         control={form.control}
                                         name="duration"
@@ -133,7 +126,8 @@ export default function Home() {
                                                 <FormLabel>Durée - {value} semaine{value > 1 ? "s" : ""}</FormLabel>
                                                 <FormControl>
                                                     <Input type={"number"} min={"1"} defaultValue={value}
-                                                           onChange={onChange} step={1} placeholder="Durée"/>
+                                                           onChange={onChange}
+                                                           step={1} placeholder="Durée"/>
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
@@ -143,11 +137,11 @@ export default function Home() {
                                 <FormField
                                     control={form.control}
                                     name="materialType"
-                                    render={({field: {value, onChange}}) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Type d'échafaudage</FormLabel>
                                             <FormControl>
-                                                <Select onValueChange={onChange}>
+                                                <Select onValueChange={field.onChange}>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Type d'échafaudage"/>
                                                     </SelectTrigger>
@@ -232,7 +226,14 @@ export default function Home() {
                                         <FormMessage/>
                                     </FormItem>
                                 )}/>}
-                        <Button type="submit">Demander un devis gratuit</Button>
+                        <Button type="submit" onClick={() => {
+                            if (sale) form.setValue("duration", -1);
+                            if (!form.getValues("vatPayer")) form.setValue("vatNumber", "N/A");
+                            toast({
+                                title: "Devis demandé",
+                                description: `Votre demande de devis a bien été envoyée à l'adresse email: ${form.getValues("email")}`,
+                            })
+                        }}>Demander un devis gratuit</Button>
                     </form>
                 </Form>
             </Card>

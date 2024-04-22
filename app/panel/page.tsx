@@ -371,22 +371,13 @@ const columns: ColumnDef<TicketResponseSchemaType>[] = [
                         </DropdownMenuItem>
                         <DropdownMenuSeparator/>
                         <DropdownMenuItem
-                            onClick={() => toast({
-                                variant: "destructive",
-                                title: "⚠️ Fonctionnalité indisponible",
-                                description: "Cette fonctionnalité arrivera dans une prochaine version de l'application",
-                                duration: 5000
-                            })}>
-                            Marquer comme {ticket.seen ? "non lu" : "lu"}
-                        </DropdownMenuItem>
+                            onClick={() => router.push(`/panel/modify/${ticket.id}`)}
+                        >Modifier le devis</DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => {
                                 window.location.href = `mailto:${ticket.email}`;
                             }}
                         >Envoyer un mail</DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => router.push(`/panel/modify/${ticket.id}`)}
-                        >Modifier le devis</DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => {
                                 toast({
@@ -398,6 +389,15 @@ const columns: ColumnDef<TicketResponseSchemaType>[] = [
                             }}
                         >Enregister le devis en PDF</DropdownMenuItem>
                         <DropdownMenuSeparator/>
+                        <DropdownMenuItem
+                            onClick={() => toast({
+                                variant: "destructive",
+                                title: "⚠️ Fonctionnalité indisponible",
+                                description: "Cette fonctionnalité arrivera dans une prochaine version de l'application",
+                                duration: 5000
+                            })}>
+                            Marquer comme {ticket.seen ? "non lu" : "lu"}
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => {
                                 toast({

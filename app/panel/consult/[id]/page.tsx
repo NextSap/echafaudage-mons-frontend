@@ -95,7 +95,7 @@ const Consult = ({params}: { params: { id: string } }) => {
                             <p>{ticket.duration} semaine(s)</p>
                         </div>}
                     <div>
-                        <Label>Estimé</Label>
+                        <Label>Prix estimé</Label>
                         <p>{ticket.estimatedPrice} €</p>
                     </div>
                 </div>
