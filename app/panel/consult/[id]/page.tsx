@@ -16,28 +16,28 @@ const Consult = ({params}: { params: { id: string } }) => {
     const router = useRouter();
     const {toast} = useToast()
 
-   /* const ticket: TicketResponseSchemaType = {
-        id: 0,
-        name: "Sophie Martin",
-        phoneNumber: "+32 485 56 78 90",
-        email: "sophiemartin@example.com",
-        address: "address",
-        vatPayer: true,
-        vatNumber: "BE0123456789",
-        materialType: "Type 1",
-        height: 10,
-        length: 10,
-        area: 100,
-        seen: false,
-        creationDate: 0,
-        duration: 0,
-        estimatedPrice: 100,
-        sale: true,
-    }; */
+    /* const ticket: TicketResponseSchemaType = {
+         id: 0,
+         name: "Sophie Martin",
+         phoneNumber: "+32 485 56 78 90",
+         email: "sophiemartin@example.com",
+         address: "address",
+         vatPayer: true,
+         vatNumber: "BE0123456789",
+         materialType: "Type 1",
+         height: 10,
+         length: 10,
+         area: 100,
+         seen: false,
+         creationDate: 0,
+         duration: 0,
+         estimatedPrice: 100,
+         sale: true,
+     }; */
 
-    const { data: ticket, isLoading, isError  } = useQuery(["ticket", params.id], () => getTicket(params.id))
+    const {data: ticket, isLoading, isError} = useQuery(["ticket", params.id], () => getTicket(params.id))
 
-    if(ticket === undefined || isError) return <div>Error when fetching, refresh the page</div>
+    if (ticket === undefined || isError) return <div>Error when fetching, refresh the page</div>
 
     return (
         <Card className="m-auto md:w-[80%] w-[90%] mt-5">
@@ -77,53 +77,45 @@ const Consult = ({params}: { params: { id: string } }) => {
                 </div>
                 <Label className="text-xl underline">Informations du devis</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {ticket.sale &&
                     <div>
                         <Label>Type de matériau</Label>
                         <p>{ticket.materialType}</p>
-                    </div>
+                    </div>}
                     <div>
                         <Label>Hauteur</Label>
-                        <p>{ticket.height} cm</p>
+                        <p>{ticket.height} m</p>
                     </div>
                     <div>
                         <Label>Longueur</Label>
-                        <p>{ticket.length} cm</p>
+                        <p>{ticket.length} m</p>
                     </div>
                     <div>
                         <Label>Surface</Label>
-                        <p>{ticket.area} cm²</p>
+                        <p>{ticket.area} m²</p>
                     </div>
                     {!ticket.sale &&
                         <div>
                             <Label>Durée</Label>
                             <p>{ticket.duration} semaine(s)</p>
                         </div>}
-                    <div>
-                        <Label>Prix estimé</Label>
-                        <p>{ticket.estimatedPrice} €</p>
-                    </div>
+                    {(!ticket.sale && ticket.area[0] >= 70) &&
+                        <div>
+                            <Label>Prix estimé</Label>
+                            <p>{ticket.estimatedPrice} €</p>
+                        </div>}
                 </div>
             </CardContent>
             <Separator className="w-16 h-[1px] m-6 bg-primary"/>
             <CardFooter className="flex md:flex-row flex-col items-start gap-5">
                 <Button variant="outline" onClick={() => {
-                    router.push(`/panel/modify/${params.id}`)
-                }}>Modifier</Button>
-                <Button variant="outline" onClick={() => {
                     window.location.href = `mailto:${ticket.email}`;
                 }}
                 >Envoyer un email</Button>
-                <PdfModal ticket={ticket}>
-                    <Button variant="outline">Prévisualiser en PDF</Button>
-                </PdfModal>
-                <Button variant="destructive" onClick={() => {
-                    toast({
-                        variant: "destructive",
-                        title: "⚠️ Fonctionnalité indisponible",
-                        description: "Cette fonctionnalité arrivera dans une prochaine version de l'application",
-                        duration: 5000
-                    })
-                }}>Supprimer</Button>
+                {(!ticket.sale && ticket.area[0] >= 70) &&
+                    <PdfModal ticket={ticket}>
+                        <Button variant="outline">Prévisualiser en PDF</Button>
+                    </PdfModal>}
             </CardFooter>
         </Card>
     );

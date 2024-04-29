@@ -17,7 +17,7 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/c
 import {z} from "zod";
 import {TicketRequestSchema} from "@/objects/request/ticket.request";
 import {useQuery} from "react-query";
-import {getTicket, updateTicket} from "@/services/ticket.service";
+import {deleteTicket, getTicket, updateTicket} from "@/services/ticket.service";
 
 const Modify = ({params}: { params: { id: string } }) => {
 
@@ -59,7 +59,7 @@ const Modify = ({params}: { params: { id: string } }) => {
             materialType: ticket.materialType,
             height: ticket.height,
             length: ticket.length,
-            area: [ticket.area],
+            area: ticket.area,
             duration: ticket.duration,
             estimatedPrice: ticket.estimatedPrice,
             sale: ticket.sale,
@@ -80,8 +80,7 @@ const Modify = ({params}: { params: { id: string } }) => {
                 variant: "destructive",
                 description: error.message,
             });
-        })
-        console.log(values)
+        });
     };
 
     const [vatPayer, setVatPayer] = useState(ticket.vatPayer);
@@ -308,12 +307,7 @@ const Modify = ({params}: { params: { id: string } }) => {
                                 }}
                         >Appliquer les modifications</Button>
                         <Button variant="destructive" onClick={() => {
-                            toast({
-                                variant: "destructive",
-                                title: "⚠️ Fonctionnalité indisponible",
-                                description: "Cette fonctionnalité arrivera dans une prochaine version de l'application",
-                                duration: 5000
-                            })
+                            deleteTicket(params.id);
                         }}>Supprimer</Button>
                     </CardFooter>
                 </Card>
