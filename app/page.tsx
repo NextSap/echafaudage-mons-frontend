@@ -19,9 +19,10 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/c
 import {Card} from "@/components/ui/card";
 import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import React, {useState} from "react";
-import {TicketRequestSchema} from "@/objects/request/ticket.request";
+import {TicketRequestSchema, TicketRequestSchemaType} from "@/objects/request/ticket.request";
 import {useToast} from "@/components/ui/use-toast";
 import {createTicket} from "@/services/ticket.service";
+import ky from "ky";
 
 export default function Home() {
     const {toast} = useToast();
@@ -44,21 +45,30 @@ export default function Home() {
         },
     });
 
+    function sendEmail(ticket: TicketRequestSchemaType) {
+        ky.post("/api/send", {json: ticket})
+            .then(() => console.log(`Email sent ${ticket.email}`))
+            .catch((error) => console.error(error));
+    }
+
     function onSubmit(values: z.infer<typeof TicketRequestSchema>) {
         // TODO: Set the price
-        const price = values.area[0] * 12;
+        let price = values.area[0] >= 70 && !values.sale ? values.area[0] * 10 : -1;
         form.setValue("estimatedPrice", price);
 
-        createTicket(values)
+        if (values.area[0] >= 70 && !values.sale) {
+            sendEmail(form.getValues());
+        }
+
+        createTicket(form.getValues())
             .then(() => {
-                // TODO: send email
                 toast({
                     title: "Devis demandé",
-                    description: `Votre demande de devis a bien été envoyée à l'adresse email: ${form.getValues("email")}`,
+                    description: `Votre demande de devis a bien été envoyée`,
                 });
             }).catch((error) => {
             toast({
-                title: "Erreur",
+                title: "Erreur dans l'envoie de la demande de devis, veuillez réessayer plus tard",
                 variant: "destructive",
                 description: error.message,
             });
@@ -134,44 +144,29 @@ export default function Home() {
                                             <FormMessage/>
                                         </FormItem>
                                     )}/>
-                                {!sale &&
+                            </div>
+                            <div className="flex flex-col gap-5 w-full">
+                                {sale &&
                                     <FormField
                                         control={form.control}
-                                        name="duration"
-                                        render={({field: {value, onChange}}) => (
+                                        name="materialType"
+                                        render={({field}) => (
                                             <FormItem>
-                                                <FormLabel>Durée - {value} semaine{value > 1 ? "s" : ""}</FormLabel>
+                                                <FormLabel>Type d'échafaudage</FormLabel>
                                                 <FormControl>
-                                                    <Input type={"number"} min={"1"} defaultValue={value}
-                                                           onChange={onChange}
-                                                           step={1} placeholder="Durée"/>
+                                                    <Select onValueChange={field.onChange}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Type d'échafaudage"/>
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem
+                                                                value="Multidirectionnel">Multidirectionnel</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
                                         )}/>}
-                            </div>
-                            <div className="flex flex-col gap-5 w-full">
-                                <FormField
-                                    control={form.control}
-                                    name="materialType"
-                                    render={({field}) => (
-                                        <FormItem>
-                                            <FormLabel>Type d'échafaudage</FormLabel>
-                                            <FormControl>
-                                                <Select onValueChange={field.onChange}>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Type d'échafaudage"/>
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="type1">Type 1</SelectItem>
-                                                        <SelectItem value="type2">Type 2</SelectItem>
-                                                        <SelectItem value="type3">Type 3</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormControl>
-                                            <FormMessage/>
-                                        </FormItem>
-                                    )}/>
                                 <FormField
                                     control={form.control}
                                     name="height"
@@ -211,6 +206,21 @@ export default function Home() {
                                             <FormMessage/>
                                         </FormItem>
                                     )}/>
+                                {!sale &&
+                                    <FormField
+                                        control={form.control}
+                                        name="duration"
+                                        render={({field: {value, onChange}}) => (
+                                            <FormItem className="md:mt-[32px]">
+                                                <FormLabel>Durée - {value} semaine{value > 1 ? "s" : ""}</FormLabel>
+                                                <FormControl>
+                                                    <Input type={"number"} min={"1"} defaultValue={value}
+                                                           onChange={onChange}
+                                                           step={1} placeholder="Durée"/>
+                                                </FormControl>
+                                                <FormMessage/>
+                                            </FormItem>
+                                        )}/>}
                             </div>
                         </div>
                         <FormField
@@ -246,6 +256,8 @@ export default function Home() {
                         <Button type="submit" onClick={() => {
                             if (sale) form.setValue("duration", -1);
                             if (!form.getValues("vatPayer")) form.setValue("vatNumber", "N/A");
+                            if (!sale) form.setValue("materialType", "N/A");
+                            form.setValue("sale", sale);
                         }}>Demander un devis gratuit</Button>
                     </form>
                 </Form>

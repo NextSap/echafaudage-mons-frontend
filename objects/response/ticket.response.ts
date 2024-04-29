@@ -7,15 +7,14 @@ export const TicketResponseSchema = z.object({
     email: z.string().email(),
     address: z.string(),
     vatPayer: z.boolean(),
+    vatNumber: z.string(),
     materialType: z.string(),
     height: z.number(),
     length: z.number(),
-    area: z.number(),
-    seen: z.boolean(),
+    area: z.array(z.number()),
     creationDate: z.number(),
     duration: z.number(),
     estimatedPrice: z.number(),
-    vatNumber: z.string(),
     sale: z.boolean(),
 });
 

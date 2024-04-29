@@ -12,7 +12,7 @@ export const TicketRequestSchema = z.object({
     area: z.array(z.number()),
     vatNumber: z.string().min(3, {message: "Numéro de TVA invalide"}),
     duration: z.coerce.number(),
-    estimatedPrice: z.number().min(0, {message: "Prix minimum: 0€"}),
+    estimatedPrice: z.number(),
     sale: z.boolean(),
 });
 
