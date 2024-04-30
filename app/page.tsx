@@ -23,6 +23,7 @@ import {TicketRequestSchema, TicketRequestSchemaType} from "@/objects/request/ti
 import {useToast} from "@/components/ui/use-toast";
 import {createTicket} from "@/services/ticket.service";
 import ky from "ky";
+import {isAntispam, setAntispam} from "@/utils/antispam.utils";
 
 export default function Home() {
     const {toast} = useToast();
@@ -52,6 +53,15 @@ export default function Home() {
     }
 
     function onSubmit(values: z.infer<typeof TicketRequestSchema>) {
+        if (isAntispam()) {
+            toast({
+                title: "Erreur dans l'envoie de la demande de devis",
+                variant: "destructive",
+                description: `Vous avez déjà envoyé votre devis, besoin d'informations supplémentaires ? Contactez-nous au ${process.env.PHONE}`,
+            })
+            return;
+        }
+
         // TODO: Set the price
         let price = values.area[0] >= 70 && !values.sale ? values.area[0] * 10 : -1;
         form.setValue("estimatedPrice", price);
@@ -62,6 +72,7 @@ export default function Home() {
 
         createTicket(form.getValues())
             .then(() => {
+                setAntispam();
                 toast({
                     title: "Devis demandé",
                     description: `Votre demande de devis a bien été envoyée`,
@@ -73,7 +84,7 @@ export default function Home() {
                 description: error.message,
             });
         });
-    };
+    }
 
     const [vatPayer, setVatPayer] = useState(false);
     const [sale, setSale] = useState(true);

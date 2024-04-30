@@ -1,12 +1,15 @@
-import {NextApiResponse} from "next";
 import {NextRequest, NextResponse} from "next/server";
 import nodemailer from 'nodemailer';
 import {TicketRequestSchemaType} from "@/objects/request/ticket.request";
 
-export async function POST(request: NextRequest, response: NextApiResponse) {
+export async function POST(request: NextRequest) {
     try {
         const ticket: TicketRequestSchemaType = await request.json();
-        const {SMTP_EMAIL, SMTP_PASSWORD} = process.env;
+        const {SMTP_EMAIL, SMTP_PASSWORD, CC_EMAIL, PHONE} = process.env;
+
+        if (!SMTP_EMAIL || !SMTP_PASSWORD || !CC_EMAIL || !PHONE)
+            throw new Error("Problem with env variables");
+
 
         const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
@@ -22,9 +25,9 @@ export async function POST(request: NextRequest, response: NextApiResponse) {
         const mailOption = {
             from: SMTP_EMAIL,
             to: ticket.email,
-            cc: SMTP_EMAIL,
+            cc: CC_EMAIL,
             subject: "Demande de devis - Echafaudage Mons",
-            html: emailToMarkdown(ticket),
+            html: emailToMarkdown(ticket, CC_EMAIL, PHONE),
         }
 
         await transporter.sendMail(mailOption)
@@ -35,7 +38,7 @@ export async function POST(request: NextRequest, response: NextApiResponse) {
     }
 }
 
-function emailToMarkdown(ticket: TicketRequestSchemaType) {
+function emailToMarkdown(ticket: TicketRequestSchemaType, email: string, phone: string) {
     return `
 Bonjour <b>{name}</b>,<br/>
 <br/>
@@ -70,24 +73,13 @@ ________________________________________<br/>
 Bien à vous,<br/>
 Echafaudage Mons
 <br/><br/><br/><br/>
+----<br/>
 Veuillez ne pas répondre à cet email svp, aucune réponse n'y sera apportée.`
         .replaceAll("{name}", ticket.name)
         .replaceAll("{description}", `${ticket.sale ? "Achat" : "Location"} ${ticket.area}m²${ticket.duration < 1 ? "" : ` - ${ticket.duration} semaine(s)`}`)
         .replaceAll("{estimatedPrice}", String(ticket.estimatedPrice))
         .replaceAll("{vat}", String(ticket.estimatedPrice * 0.21))
         .replaceAll("{estimatedPriceVat}", String(ticket.estimatedPrice * 1.21))
-        .replaceAll("{email}", "")
-        .replaceAll("{phone}", "");
+        .replaceAll("{email}", email)
+        .replaceAll("{phone}", phone);
 }
-
-/*export function compileWelcomeTemplate(ticket: TicketRequestSchemaType) {
-    const template = handlebars.compile(email_template);
-    const htmlBody = template({
-        name: ticket.name,
-        description: `${ticket.sale ? "ACHAT" : "LOCATION"} ${ticket.area}m²${ticket.duration < 1 ? "" : ` - ${ticket.duration} semaine(s)`}`,
-        estimatedPrice: ticket.estimatedPrice,
-        vat: ticket.estimatedPrice * 0.21,
-        estimatedPriceVat: ticket.estimatedPrice * 1.21,
-    });
-    return htmlBody;
-} */
