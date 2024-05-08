@@ -1,1 +1,1 @@
-export const base_url = "http://151.80.139.81:8080";
+export const base_url = "https://echafaudage-mons-devis.online:8080";
